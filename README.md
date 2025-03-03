@@ -24,7 +24,7 @@
 Клонируйте репозиторий на свой компьютер:
 
 ```bash
-git clone https://github.com/your-repo/library-api.git
+git clone https://github.com/mda-les13/Library-Web-API.git
 cd library-api
 ```
 
