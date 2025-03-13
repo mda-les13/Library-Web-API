@@ -28,6 +28,10 @@ namespace Library.BusinessLogic.Services
         public async Task<AuthorModel> GetAuthorById(int id)
         {
             var author = await _authorRepository.GetAuthorById(id);
+            if (author == null)
+            {
+                throw new KeyNotFoundException($"Author with ID {id} not found.");
+            }
             return _mapper.Map<AuthorModel>(author);
         }
 
@@ -51,17 +55,35 @@ namespace Library.BusinessLogic.Services
                 throw new ValidationException(validationResult.Errors);
             }
 
-            var author = _mapper.Map<Author>(authorModel);
-            await _authorRepository.UpdateAuthor(author);
+            var author = await _authorRepository.GetAuthorById(authorModel.Id);
+            if (author == null)
+            {
+                throw new KeyNotFoundException($"Author with ID {authorModel.Id} not found.");
+            }
+
+            var updatedAuthor = _mapper.Map<Author>(authorModel);
+            await _authorRepository.UpdateAuthor(updatedAuthor);
         }
 
         public async Task DeleteAuthor(int id)
         {
+            var author = await _authorRepository.GetAuthorById(id);
+            if (author == null)
+            {
+                throw new KeyNotFoundException($"Author with ID {id} not found.");
+            }
+
             await _authorRepository.DeleteAuthor(id);
         }
 
         public async Task<IEnumerable<BookModel>> GetBooksByAuthor(int authorId)
         {
+            var author = await _authorRepository.GetAuthorById(authorId);
+            if (author == null)
+            {
+                throw new KeyNotFoundException($"Author with ID {authorId} not found.");
+            }
+
             var books = await _authorRepository.GetBooksByAuthor(authorId);
             return _mapper.Map<IEnumerable<BookModel>>(books);
         }
