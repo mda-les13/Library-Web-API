@@ -1,48 +1,46 @@
 ﻿using AutoMapper;
-using Library.DataAccess.Context;
 using Library.DataAccess.Entities;
+using Library.DataAccess.Repositories;
 using Library.BusinessLogic.Models;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 
 namespace Library.BusinessLogic.Services
 {
     public class UserService : IUserService
     {
-        private readonly LibraryContext _context;
+        private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IValidator<RegisterUserModel> _validator;
 
-        public UserService(LibraryContext context, IMapper mapper)
+        public UserService(IUserRepository userRepository, IMapper mapper, IValidator<RegisterUserModel> validator)
         {
-            _context = context;
+            _userRepository = userRepository;
             _mapper = mapper;
+            _validator = validator;
         }
 
         public async Task<User> Authenticate(AuthenticateRequestModel model)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == model.Username);
-
-            if (user == null) return null;
-
-            if (!VerifyPasswordHash(model.Password, user.PasswordHash)) return null;
-
+            var user = await _userRepository.Authenticate(model.Username, model.Password);
             return user;
         }
 
         public async Task<User> Register(RegisterUserModel model)
         {
-            if (await _context.Users.AnyAsync(x => x.Username == model.Username))
+            var validationResult = _validator.Validate(model);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
+            var users = await _userRepository.GetAll();
+            if (await users.AnyAsync(x => x.Username == model.Username))
                 throw new Exception("Username '" + model.Username + "' is already taken");
 
-            byte[] passwordHash, passwordSalt;
-            CreatePasswordHash(model.Password, out passwordHash, out passwordSalt);
-
             var user = _mapper.Map<User>(model);
-            user.PasswordHash = passwordHash;
-            user.PasswordSalt = passwordSalt;
 
-            var role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == model.Role);
+            var role = await _userRepository.GetRoleByName(model.Role);
             if (role == null)
                 throw new Exception("Role '" + model.Role + "' does not exist");
 
@@ -54,37 +52,18 @@ namespace Library.BusinessLogic.Services
                 }
             };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return user;
+            var registeredUser = await _userRepository.Register(user, model.Password);
+            return registeredUser;
         }
 
         public async Task<User> GetById(int id)
         {
-            return await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == id);
-        }
-
-        private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
+            var user = await _userRepository.GetById(id);
+            if (user == null)
             {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                throw new KeyNotFoundException($"User with ID {id} not found.");
             }
-        }
-
-        private static bool VerifyPasswordHash(string password, byte[] storedHash)
-        {
-            using (var hmac = new HMACSHA512(storedHash))
-            {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                for (int i = 0; i < computedHash.Length; i++)
-                {
-                    if (computedHash[i] != storedHash[i + 32]) return false;
-                }
-            }
-            return true;
+            return user;
         }
     }
 }
