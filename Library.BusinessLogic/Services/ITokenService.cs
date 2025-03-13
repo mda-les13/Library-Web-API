@@ -8,7 +8,7 @@ namespace Library.BusinessLogic.Services
         AuthenticateResponseModel Authenticate(User user);
         string GenerateJwtToken(User user);
         string GenerateRefreshToken();
-        Task<bool> ValidateRefreshToken(string refreshToken, int userId);
-        Task RevokeRefreshToken(string refreshToken);
+        Task<bool> ValidateRefreshToken(string refreshToken, int userId, CancellationToken cancellationToken = default);
+        Task RevokeRefreshToken(string refreshToken, CancellationToken cancellationToken = default);
     }
 }

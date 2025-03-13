@@ -21,16 +21,16 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<BookModel>>> GetAllBooks()
+        public async Task<ActionResult<IEnumerable<BookModel>>> GetAllBooks(CancellationToken cancellationToken = default)
         {
-            var books = await _bookService.GetAllBooks();
+            var books = await _bookService.GetAllBooks(cancellationToken);
             return Ok(books);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<BookModel>> GetBookById(int id)
+        public async Task<ActionResult<BookModel>> GetBookById(int id, CancellationToken cancellationToken = default)
         {
-            var book = await _bookService.GetBookById(id);
+            var book = await _bookService.GetBookById(id, cancellationToken);
             if (book == null)
             {
                 return NotFound();
@@ -39,9 +39,9 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpGet("isbn/{isbn}")]
-        public async Task<ActionResult<BookModel>> GetBookByISBN(string isbn)
+        public async Task<ActionResult<BookModel>> GetBookByISBN(string isbn, CancellationToken cancellationToken = default)
         {
-            var book = await _bookService.GetBookByISBN(isbn);
+            var book = await _bookService.GetBookByISBN(isbn, cancellationToken);
             if (book == null)
             {
                 return NotFound();
@@ -50,49 +50,49 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<BookModel>> AddBook(BookModel bookModel)
+        public async Task<ActionResult<BookModel>> AddBook(BookModel bookModel, CancellationToken cancellationToken = default)
         {
-            await _bookService.AddBook(bookModel);
+            await _bookService.AddBook(bookModel, cancellationToken);
             return CreatedAtAction(nameof(GetBookById), new { id = bookModel.Id }, bookModel);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateBook(int id, BookModel bookModel)
+        public async Task<IActionResult> UpdateBook(int id, BookModel bookModel, CancellationToken cancellationToken = default)
         {
             if (id != bookModel.Id)
             {
                 return BadRequest();
             }
 
-            await _bookService.UpdateBook(bookModel);
+            await _bookService.UpdateBook(bookModel, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteBook(int id)
+        public async Task<IActionResult> DeleteBook(int id, CancellationToken cancellationToken = default)
         {
-            await _bookService.DeleteBook(id);
+            await _bookService.DeleteBook(id, cancellationToken);
             return NoContent();
         }
 
         [HttpPost("{id}/borrow")]
-        public async Task<IActionResult> BorrowBook(int id, [FromBody] DateTime dueDate)
+        public async Task<IActionResult> BorrowBook(int id, [FromBody] DateTime dueDate, CancellationToken cancellationToken = default)
         {
-            await _bookService.BorrowBook(id, dueDate);
+            await _bookService.BorrowBook(id, dueDate, cancellationToken);
             return NoContent();
         }
 
         [HttpPost("{id}/return")]
-        public async Task<IActionResult> ReturnBook(int id)
+        public async Task<IActionResult> ReturnBook(int id, CancellationToken cancellationToken = default)
         {
-            await _bookService.ReturnBook(id);
+            await _bookService.ReturnBook(id, cancellationToken);
             return NoContent();
         }
 
         [HttpPost("{id}/image")]
-        public async Task<IActionResult> AddBookImage(int id, [FromBody] string imageUrl)
+        public async Task<IActionResult> AddBookImage(int id, [FromBody] string imageUrl, CancellationToken cancellationToken = default)
         {
-            await _bookService.AddBookImage(id, imageUrl);
+            await _bookService.AddBookImage(id, imageUrl, cancellationToken);
             return NoContent();
         }
     }

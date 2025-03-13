@@ -22,9 +22,9 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpPost("authenticate")]
-        public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequestModel model)
+        public async Task<IActionResult> Authenticate([FromBody] AuthenticateRequestModel model, CancellationToken cancellationToken = default)
         {
-            var user = await _userService.Authenticate(model);
+            var user = await _userService.Authenticate(model, cancellationToken);
             if (user == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
 
@@ -33,11 +33,11 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterUserModel model)
+        public async Task<IActionResult> Register([FromBody] RegisterUserModel model, CancellationToken cancellationToken = default)
         {
             try
             {
-                var user = await _userService.Register(model);
+                var user = await _userService.Register(model, cancellationToken);
                 return Ok(_mapper.Map<UserModel>(user));
             }
             catch (Exception ex)
@@ -47,7 +47,7 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken, CancellationToken cancellationToken = default)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
             if (userIdClaim == null)
@@ -56,19 +56,19 @@ namespace Library.WebAPI.Controllers
             if (!int.TryParse(userIdClaim, out int userId))
                 return Unauthorized(new { message = "Invalid token" });
 
-            var isValid = await _tokenService.ValidateRefreshToken(refreshToken, userId);
+            var isValid = await _tokenService.ValidateRefreshToken(refreshToken, userId, cancellationToken);
             if (!isValid)
                 return Unauthorized(new { message = "Invalid token" });
 
-            var user = await _userService.GetById(userId);
+            var user = await _userService.GetById(userId, cancellationToken);
             var response = _tokenService.Authenticate(user);
-            await _tokenService.RevokeRefreshToken(refreshToken);
+            await _tokenService.RevokeRefreshToken(refreshToken, cancellationToken);
 
             return Ok(response);
         }
 
         [HttpPost("revoke-token")]
-        public async Task<IActionResult> RevokeToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RevokeToken([FromBody] string refreshToken, CancellationToken cancellationToken = default)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
             if (userIdClaim == null)
@@ -77,11 +77,11 @@ namespace Library.WebAPI.Controllers
             if (!int.TryParse(userIdClaim, out int userId))
                 return Unauthorized(new { message = "Invalid token" });
 
-            var isValid = await _tokenService.ValidateRefreshToken(refreshToken, userId);
+            var isValid = await _tokenService.ValidateRefreshToken(refreshToken, userId, cancellationToken);
             if (!isValid)
                 return Unauthorized(new { message = "Invalid token" });
 
-            await _tokenService.RevokeRefreshToken(refreshToken);
+            await _tokenService.RevokeRefreshToken(refreshToken, cancellationToken);
 
             return Ok(new { message = "Token revoked" });
         }

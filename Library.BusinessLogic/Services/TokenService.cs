@@ -69,25 +69,25 @@ namespace Library.BusinessLogic.Services
             return Convert.ToBase64String(randomNumber);
         }
 
-        public async Task<bool> ValidateRefreshToken(string refreshToken, int userId)
+        public async Task<bool> ValidateRefreshToken(string refreshToken, int userId, CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.RefreshToken == refreshToken);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.RefreshToken == refreshToken, cancellationToken);
             if (user == null || user.TokenExpires <= DateTime.UtcNow)
                 return false;
 
             return true;
         }
 
-        public async Task RevokeRefreshToken(string refreshToken)
+        public async Task RevokeRefreshToken(string refreshToken, CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken, cancellationToken);
             if (user != null)
             {
                 user.RefreshToken = null;
                 user.TokenCreated = null;
                 user.TokenExpires = null;
                 _context.Users.Update(user);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
         }
     }

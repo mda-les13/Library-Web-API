@@ -4,11 +4,11 @@ namespace Library.DataAccess.Repositories
 {
     public interface IBookRepository
     {
-        Task<IEnumerable<Book>> GetAllBooks();
-        Task<Book> GetBookById(int id);
-        Task<Book> GetBookByISBN(string isbn);
-        Task AddBook(Book book);
-        Task UpdateBook(Book book);
-        Task DeleteBook(int id);
+        Task<IEnumerable<Book>> GetAllBooks(CancellationToken cancellationToken = default);
+        Task<Book> GetBookById(int id, CancellationToken cancellationToken = default);
+        Task<Book> GetBookByISBN(string isbn, CancellationToken cancellationToken = default);
+        Task AddBook(Book book, CancellationToken cancellationToken = default);
+        Task UpdateBook(Book book, CancellationToken cancellationToken = default);
+        Task DeleteBook(int id, CancellationToken cancellationToken = default);
     }
 }

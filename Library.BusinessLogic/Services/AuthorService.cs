@@ -19,15 +19,15 @@ namespace Library.BusinessLogic.Services
             _validator = validator;
         }
 
-        public async Task<IEnumerable<AuthorModel>> GetAllAuthors()
+        public async Task<IEnumerable<AuthorModel>> GetAllAuthors(CancellationToken cancellationToken = default)
         {
-            var authors = await _authorRepository.GetAllAuthors();
+            var authors = await _authorRepository.GetAllAuthors(cancellationToken);
             return _mapper.Map<IEnumerable<AuthorModel>>(authors);
         }
 
-        public async Task<AuthorModel> GetAuthorById(int id)
+        public async Task<AuthorModel> GetAuthorById(int id, CancellationToken cancellationToken = default)
         {
-            var author = await _authorRepository.GetAuthorById(id);
+            var author = await _authorRepository.GetAuthorById(id, cancellationToken);
             if (author == null)
             {
                 throw new KeyNotFoundException($"Author with ID {id} not found.");
@@ -35,7 +35,7 @@ namespace Library.BusinessLogic.Services
             return _mapper.Map<AuthorModel>(author);
         }
 
-        public async Task AddAuthor(AuthorModel authorModel)
+        public async Task AddAuthor(AuthorModel authorModel, CancellationToken cancellationToken = default)
         {
             var validationResult = _validator.Validate(authorModel);
             if (!validationResult.IsValid)
@@ -44,10 +44,10 @@ namespace Library.BusinessLogic.Services
             }
 
             var author = _mapper.Map<Author>(authorModel);
-            await _authorRepository.AddAuthor(author);
+            await _authorRepository.AddAuthor(author, cancellationToken);
         }
 
-        public async Task UpdateAuthor(AuthorModel authorModel)
+        public async Task UpdateAuthor(AuthorModel authorModel, CancellationToken cancellationToken = default)
         {
             var validationResult = _validator.Validate(authorModel);
             if (!validationResult.IsValid)
@@ -55,36 +55,36 @@ namespace Library.BusinessLogic.Services
                 throw new ValidationException(validationResult.Errors);
             }
 
-            var author = await _authorRepository.GetAuthorById(authorModel.Id);
+            var author = await _authorRepository.GetAuthorById(authorModel.Id, cancellationToken);
             if (author == null)
             {
                 throw new KeyNotFoundException($"Author with ID {authorModel.Id} not found.");
             }
 
             var updatedAuthor = _mapper.Map<Author>(authorModel);
-            await _authorRepository.UpdateAuthor(updatedAuthor);
+            await _authorRepository.UpdateAuthor(updatedAuthor, cancellationToken);
         }
 
-        public async Task DeleteAuthor(int id)
+        public async Task DeleteAuthor(int id, CancellationToken cancellationToken = default)
         {
-            var author = await _authorRepository.GetAuthorById(id);
+            var author = await _authorRepository.GetAuthorById(id, cancellationToken);
             if (author == null)
             {
                 throw new KeyNotFoundException($"Author with ID {id} not found.");
             }
 
-            await _authorRepository.DeleteAuthor(id);
+            await _authorRepository.DeleteAuthor(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<BookModel>> GetBooksByAuthor(int authorId)
+        public async Task<IEnumerable<BookModel>> GetBooksByAuthor(int authorId, CancellationToken cancellationToken = default)
         {
-            var author = await _authorRepository.GetAuthorById(authorId);
+            var author = await _authorRepository.GetAuthorById(authorId, cancellationToken);
             if (author == null)
             {
                 throw new KeyNotFoundException($"Author with ID {authorId} not found.");
             }
 
-            var books = await _authorRepository.GetBooksByAuthor(authorId);
+            var books = await _authorRepository.GetBooksByAuthor(authorId, cancellationToken);
             return _mapper.Map<IEnumerable<BookModel>>(books);
         }
     }

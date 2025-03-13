@@ -13,41 +13,41 @@ namespace Library.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Author>> GetAllAuthors()
+        public async Task<IEnumerable<Author>> GetAllAuthors(CancellationToken cancellationToken = default)
         {
-            return await _context.Authors.ToListAsync();
+            return await _context.Authors.ToListAsync(cancellationToken);
         }
 
-        public async Task<Author> GetAuthorById(int id)
+        public async Task<Author> GetAuthorById(int id, CancellationToken cancellationToken = default)
         {
-            return await _context.Authors.FindAsync(id);
+            return await _context.Authors.FindAsync(id, cancellationToken);
         }
 
-        public async Task AddAuthor(Author author)
+        public async Task AddAuthor(Author author, CancellationToken cancellationToken = default)
         {
             _context.Authors.Add(author);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdateAuthor(Author author)
+        public async Task UpdateAuthor(Author author, CancellationToken cancellationToken = default)
         {
             _context.Entry(author).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task DeleteAuthor(int id)
+        public async Task DeleteAuthor(int id, CancellationToken cancellationToken = default)
         {
-            var author = await _context.Authors.FindAsync(id);
+            var author = await _context.Authors.FindAsync(new object[] { id }, cancellationToken);
             if (author != null)
             {
                 _context.Authors.Remove(author);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
         }
 
-        public async Task<IEnumerable<Book>> GetBooksByAuthor(int authorId)
+        public async Task<IEnumerable<Book>> GetBooksByAuthor(int authorId, CancellationToken cancellationToken = default)
         {
-            return await _context.Books.Where(b => b.AuthorId == authorId).ToListAsync();
+            return await _context.Books.Where(b => b.AuthorId == authorId).ToListAsync(cancellationToken);
         }
     }
 }

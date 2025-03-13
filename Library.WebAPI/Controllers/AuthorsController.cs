@@ -21,16 +21,16 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AuthorModel>>> GetAllAuthors()
+        public async Task<ActionResult<IEnumerable<AuthorModel>>> GetAllAuthors(CancellationToken cancellationToken = default)
         {
-            var authors = await _authorService.GetAllAuthors();
+            var authors = await _authorService.GetAllAuthors(cancellationToken);
             return Ok(authors);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<AuthorModel>> GetAuthorById(int id)
+        public async Task<ActionResult<AuthorModel>> GetAuthorById(int id, CancellationToken cancellationToken = default)
         {
-            var author = await _authorService.GetAuthorById(id);
+            var author = await _authorService.GetAuthorById(id, cancellationToken);
             if (author == null)
             {
                 return NotFound();
@@ -39,35 +39,35 @@ namespace Library.WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<AuthorModel>> AddAuthor(AuthorModel authorModel)
+        public async Task<ActionResult<AuthorModel>> AddAuthor(AuthorModel authorModel, CancellationToken cancellationToken = default)
         {
-            await _authorService.AddAuthor(authorModel);
+            await _authorService.AddAuthor(authorModel, cancellationToken);
             return CreatedAtAction(nameof(GetAuthorById), new { id = authorModel.Id }, authorModel);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAuthor(int id, AuthorModel authorModel)
+        public async Task<IActionResult> UpdateAuthor(int id, AuthorModel authorModel, CancellationToken cancellationToken = default)
         {
             if (id != authorModel.Id)
             {
                 return BadRequest();
             }
 
-            await _authorService.UpdateAuthor(authorModel);
+            await _authorService.UpdateAuthor(authorModel, cancellationToken);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAuthor(int id)
+        public async Task<IActionResult> DeleteAuthor(int id, CancellationToken cancellationToken = default)
         {
-            await _authorService.DeleteAuthor(id);
+            await _authorService.DeleteAuthor(id, cancellationToken);
             return NoContent();
         }
 
         [HttpGet("{id}/books")]
-        public async Task<ActionResult<IEnumerable<BookModel>>> GetBooksByAuthor(int id)
+        public async Task<ActionResult<IEnumerable<BookModel>>> GetBooksByAuthor(int id, CancellationToken cancellationToken = default)
         {
-            var books = await _authorService.GetBooksByAuthor(id);
+            var books = await _authorService.GetBooksByAuthor(id, cancellationToken);
             return Ok(books);
         }
     }

@@ -15,9 +15,9 @@ namespace Library.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<User> Authenticate(string username, string password)
+        public async Task<User> Authenticate(string username, string password, CancellationToken cancellationToken = default)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username, cancellationToken);
 
             if (user == null) return null;
 
@@ -26,7 +26,7 @@ namespace Library.DataAccess.Repositories
             return user;
         }
 
-        public async Task<User> Register(User user, string password)
+        public async Task<User> Register(User user, string password, CancellationToken cancellationToken = default)
         {
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
@@ -35,24 +35,24 @@ namespace Library.DataAccess.Repositories
             user.PasswordSalt = passwordSalt;
 
             _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return user;
         }
 
-        public async Task<User> GetById(int id)
+        public async Task<User> GetById(int id, CancellationToken cancellationToken = default)
         {
-            return await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         }
 
-        public Task<IQueryable<User>> GetAll()
+        public Task<IQueryable<User>> GetAll(CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).AsQueryable());
         }
 
-        public async Task<Role> GetRoleByName(string roleName)
+        public async Task<Role> GetRoleByName(string roleName, CancellationToken cancellationToken = default)
         {
-            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName, cancellationToken);
         }
 
         private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
