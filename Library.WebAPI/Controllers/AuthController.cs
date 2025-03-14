@@ -3,6 +3,7 @@ using Library.BusinessLogic.Services;
 using Library.BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Library.WebAPI.Middleware;
 
 namespace Library.WebAPI.Controllers
 {
@@ -26,7 +27,7 @@ namespace Library.WebAPI.Controllers
         {
             var user = await _userService.Authenticate(model, cancellationToken);
             if (user == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+                throw new BadRequestException("Username or password is incorrect");
 
             var response = _tokenService.Authenticate(user);
             return Ok(response);
@@ -40,9 +41,13 @@ namespace Library.WebAPI.Controllers
                 var user = await _userService.Register(model, cancellationToken);
                 return Ok(_mapper.Map<UserModel>(user));
             }
+            catch (FluentValidation.ValidationException ex)
+            {
+                throw new ValidationFailedException(ex.Errors.Select(e => e.ErrorMessage));
+            }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                throw new InternalServerException(ex.Message);
             }
         }
 
@@ -51,19 +56,17 @@ namespace Library.WebAPI.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
             if (userIdClaim == null)
-                return Unauthorized(new { message = "Invalid token" });
-
+                throw new UnauthorizedAccessException("Invalid token");
             if (!int.TryParse(userIdClaim, out int userId))
-                return Unauthorized(new { message = "Invalid token" });
+                throw new UnauthorizedAccessException("Invalid token");
 
             var isValid = await _tokenService.ValidateRefreshToken(refreshToken, userId, cancellationToken);
             if (!isValid)
-                return Unauthorized(new { message = "Invalid token" });
+                throw new UnauthorizedAccessException("Invalid token");
 
             var user = await _userService.GetById(userId, cancellationToken);
             var response = _tokenService.Authenticate(user);
             await _tokenService.RevokeRefreshToken(refreshToken, cancellationToken);
-
             return Ok(response);
         }
 
@@ -72,17 +75,15 @@ namespace Library.WebAPI.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.Name)?.Value;
             if (userIdClaim == null)
-                return Unauthorized(new { message = "Invalid token" });
-
+                throw new UnauthorizedAccessException("Invalid token");
             if (!int.TryParse(userIdClaim, out int userId))
-                return Unauthorized(new { message = "Invalid token" });
+                throw new UnauthorizedAccessException("Invalid token");
 
             var isValid = await _tokenService.ValidateRefreshToken(refreshToken, userId, cancellationToken);
             if (!isValid)
-                return Unauthorized(new { message = "Invalid token" });
+                throw new UnauthorizedAccessException("Invalid token");
 
             await _tokenService.RevokeRefreshToken(refreshToken, cancellationToken);
-
             return Ok(new { message = "Token revoked" });
         }
     }

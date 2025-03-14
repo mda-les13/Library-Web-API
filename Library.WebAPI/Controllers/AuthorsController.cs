@@ -3,6 +3,7 @@ using Library.BusinessLogic.Services;
 using Library.BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Library.WebAPI.Middleware;
 
 namespace Library.WebAPI.Controllers
 {
@@ -33,7 +34,7 @@ namespace Library.WebAPI.Controllers
             var author = await _authorService.GetAuthorById(id, cancellationToken);
             if (author == null)
             {
-                return NotFound();
+                throw new NotFoundException($"Author with ID {id} not found");
             }
             return Ok(author);
         }
@@ -41,8 +42,19 @@ namespace Library.WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<AuthorModel>> AddAuthor(AuthorModel authorModel, CancellationToken cancellationToken = default)
         {
-            await _authorService.AddAuthor(authorModel, cancellationToken);
-            return CreatedAtAction(nameof(GetAuthorById), new { id = authorModel.Id }, authorModel);
+            try
+            {
+                await _authorService.AddAuthor(authorModel, cancellationToken);
+                return CreatedAtAction(nameof(GetAuthorById), new { id = authorModel.Id }, authorModel);
+            }
+            catch (ConflictException ex)
+            {
+                throw new ConflictException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new InternalServerException(ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
@@ -50,18 +62,39 @@ namespace Library.WebAPI.Controllers
         {
             if (id != authorModel.Id)
             {
-                return BadRequest();
+                throw new BadRequestException("Author ID mismatch");
             }
-
-            await _authorService.UpdateAuthor(authorModel, cancellationToken);
-            return NoContent();
+            try
+            {
+                await _authorService.UpdateAuthor(authorModel, cancellationToken);
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                throw new NotFoundException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new InternalServerException(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id, CancellationToken cancellationToken = default)
         {
-            await _authorService.DeleteAuthor(id, cancellationToken);
-            return NoContent();
+            try
+            {
+                await _authorService.DeleteAuthor(id, cancellationToken);
+                return NoContent();
+            }
+            catch (NotFoundException ex)
+            {
+                throw new NotFoundException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new InternalServerException(ex.Message);
+            }
         }
 
         [HttpGet("{id}/books")]

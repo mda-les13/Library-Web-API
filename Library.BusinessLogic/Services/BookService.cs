@@ -71,7 +71,6 @@ namespace Library.BusinessLogic.Services
                 throw new ValidationException(validationResult.Errors);
             }
 
-            // Check if book exists
             var existingBook = await _bookRepository.GetBookById(bookModel.Id, cancellationToken);
             if (existingBook == null)
             {

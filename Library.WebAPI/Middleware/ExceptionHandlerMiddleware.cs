@@ -30,6 +30,7 @@ namespace Library.WebAPI.Middleware
         private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
+
             HttpStatusCode statusCode = HttpStatusCode.InternalServerError;
             var response = new ErrorResponse
             {
@@ -37,31 +38,26 @@ namespace Library.WebAPI.Middleware
                 Message = "Internal Server Error from the custom middleware."
             };
 
-            if (exception is FluentValidation.ValidationException validationException)
+            if (exception is CustomException customException)
+            {
+                statusCode = customException.StatusCode;
+                response.Message = customException.Message;
+
+                if (customException is ValidationFailedException validationException)
+                {
+                    response.Errors = validationException.Errors;
+                }
+            }
+            else if (exception is FluentValidation.ValidationException validationException)
             {
                 statusCode = HttpStatusCode.BadRequest;
                 response.Message = "Validation Failed";
                 response.Errors = validationException.Errors.Select(e => e.ErrorMessage);
             }
-            else if (exception is KeyNotFoundException)
+            else if (exception is UnauthorizedAccessException unauthorizedAccessException)
             {
-                statusCode = HttpStatusCode.NotFound;
-                response.Message = exception.Message;
-            }
-            else if (exception is ArgumentException)
-            {
-                statusCode = HttpStatusCode.BadRequest;
-                response.Message = exception.Message;
-            }
-            else if (exception is InvalidOperationException)
-            {
-                statusCode = HttpStatusCode.BadRequest;
-                response.Message = exception.Message;
-            }
-            else if (exception is Exception ex)
-            {
-                statusCode = HttpStatusCode.InternalServerError;
-                response.Message = ex.Message;
+                statusCode = HttpStatusCode.Unauthorized;
+                response.Message = unauthorizedAccessException.Message;
             }
 
             context.Response.StatusCode = (int)statusCode;
